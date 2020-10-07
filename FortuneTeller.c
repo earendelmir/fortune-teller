@@ -47,7 +47,7 @@ void answer() {
     index = rand() % NUM_ANSWERS;
   oldindex = index;
 
-  printf("%s\n", answers[index]);
+  printf("%s\n\n", answers[index]);
 }
 
 
