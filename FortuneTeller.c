@@ -100,12 +100,15 @@ bool validQuestion(const char *question) {
 
   // gets the first word of the sentence
   char firstWord[LEN/10];
-  unsigned short int len = strlen(question), i;
+  unsigned short int len = strlen(question), i, index = 0;
   for (i = 0; i < len; i++)
     if (question[i] == ' ')
-      break;
-    else firstWord[i] = question[i];
-  firstWord[i] = '\0';
+      // breaks the loop if a space is encountered (and a word has already been found)
+      if (index > 0) break;
+      else continue;
+    else
+      firstWord[index++] = question[i];
+  firstWord[index] = '\0';
 
   // if the first word is one of the following then the question is considered valid
   static const char *qStarters[NUM_QSTARTERS] = {"who", "when", "where", "what", "how", "can", "could", "should", "shall", "will", "do", "does", "did", "am", "is", "are"};
