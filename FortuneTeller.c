@@ -9,25 +9,119 @@
 #define NUM_QUITTERS 5
 
 
-void answer();
-void ask(const char *prompt);
+void ask(const char *prompt, char *string);
+void clear(char *string);
 void lower(char *string);
 bool validQuestion(const char *question);
 bool wantsToQuit(const char *question);
+void answer();
 
 
 int main(void) {
-  printf("Welcome,\nI am The Fortune Teller; I know all about the past, the present and the future and I am here to answer your questions.\n");
-  printf("If you no longer require my services please kindly tell me to shut up and I will leave.\n\n");
+  printf("Welcome, I am The Fortune Teller; I know all about the past, the present and the future.\n");
+  printf("I will answer 3 questions from you today.\n");
+  printf("If you no longer require my services please kindly tell me to shut up and I will vanish.\n");
 
   srand(time(NULL));
+  char string[LEN];
+  unsigned short int count = 0;
 
-  while (true) {
-    ask("Ask me anything: ");
-    answer();
+  while (count < 3) {
+    ask("Ask me anything: ", string);
+    if (wantsToQuit(string))
+      break;
+    if (validQuestion(string)) {
+      answer();
+      count++;
+    }
   }
 
+  printf("I hope you found the answers you were looking for!\n");
   return (EXIT_SUCCESS);
+}
+
+
+
+void ask(const char *prompt, char *string) {
+  clear(string);
+
+  do {
+    // prints the prompt (if given) before taking the user input
+    printf("\n%s", prompt ? prompt : "\n> ");
+    fgets(string, sizeof(char)*LEN, stdin);
+  // keeps asking if the string is empty
+  } while (string[0] == '\n');
+
+  // removes the last character which is a newline
+  string[strlen(string)-1] = '\0';
+
+  lower(string);
+}
+
+
+
+// clears the string
+void clear(char *string) {
+  unsigned short int len = strlen(string);
+  for (unsigned short int i = 0; i < len; i++)
+    string[i] = '\0';
+  string = NULL;
+}
+
+
+
+// turns all the letters of the string to lowercase
+void lower(char *string) {
+  unsigned short int len = strlen(string);
+  for (unsigned short int i = 0; i < len; i++)
+    if (string[i] >= 'A' && string[i] <= 'Z')
+      string[i] += 32;
+}
+
+
+
+bool validQuestion(const char *question) {
+  // only accepts strings which end with a ? to make sure they are questions and not affirmations
+  if (question[strlen(question)-1] != '?') {
+    printf("I don't see a \"?\" at the end; are you sure you asked a proper question?\n");
+    return false;
+  }
+
+  // gets the first word of the sentence
+  char firstWord[LEN/10];
+  unsigned short int len = strlen(question), i, index = 0;
+  for (i = 0; i < len; i++)
+    if (question[i] == ' ')
+      // breaks the loop if a space is encountered (and a word has already been found)
+      if (index > 0)
+        break;
+      // keeps looking if no valid character has been found yet
+      else
+        continue;
+    else
+      firstWord[index++] = question[i];
+  firstWord[index] = '\0';
+
+  // if the first word is one of the following then the question is considered valid
+  static const char *qStarters[NUM_QSTARTERS] = {"who", "when", "where", "what", "how", "can", "could", "should",\
+                                                  "shall", "will", "do", "does", "did", "am", "is", "are"};
+  for (i = 0; i < NUM_QSTARTERS; i++)
+    if (strcmp(firstWord, qStarters[i]) == 0)
+      return true;
+
+  printf("Are you sure you asked a proper question?\n");
+  return false;
+}
+
+
+
+// checks wether the user input can be translated into "quit program"
+bool wantsToQuit(const char *question) {
+  static const char *quitters[NUM_QUITTERS] = {"shut up", "please shut up", "quit", "exit", "stop"};
+  for (unsigned short int i = 0; i < NUM_QUITTERS; i++)
+    if (strcmp(question, quitters[i]) == 0)
+      return true;
+  return false;
 }
 
 
@@ -47,86 +141,5 @@ void answer() {
     index = rand() % NUM_ANSWERS;
   oldindex = index;
 
-  printf("%s\n\n", answers[index]);
-}
-
-
-
-void ask(const char *prompt) {
-  char string[LEN];
-  // keeps asking if the string is empty (when the user presses ENTER without actually writing anything first)
-  do {
-    // prints the prompt (if given) before taking the user input
-    printf("%s", prompt != NULL ? prompt : "> ");
-    fgets(string, sizeof(char)*LEN, stdin);
-  } while (string[0] == '\n');
-
-  // removes the last character which is a newline
-  string[strlen(string)-1] = '\0';
-
-  // turns every letter to lowercase to simplify comparisons
-  lower(string);
-
-  // if the input is not considered a valid question the user has to write something else
-  if (!validQuestion(string))
-    return ask(prompt);
-}
-
-
-
-// turns all the letters of the string to lowercase
-void lower(char *string) {
-  unsigned short int len = strlen(string);
-
-  for (unsigned short int i = 0; i < len; i++)
-    if (string[i] >= 'A' && string[i] <= 'Z')
-      string[i] += 32;
-}
-
-
-
-bool validQuestion(const char *question) {
-  // maybe the user wants to quit the application
-  if (wantsToQuit(question)) {
-    printf("I hope you found the answers you were looking for!\n");
-    exit (EXIT_SUCCESS);
-  }
-
-  // only accepts strings which end with a ? to make sure they are questions and not affirmations
-  if (question[strlen(question)-1] != '?') {
-    printf("I don't see a \"?\" at the end; are you sure you asked a proper question?\n");
-    return false;
-  }
-
-  // gets the first word of the sentence
-  char firstWord[LEN/10];
-  unsigned short int len = strlen(question), i, index = 0;
-  for (i = 0; i < len; i++)
-    if (question[i] == ' ')
-      // breaks the loop if a space is encountered (and a word has already been found)
-      if (index > 0) break;
-      else continue;
-    else
-      firstWord[index++] = question[i];
-  firstWord[index] = '\0';
-
-  // if the first word is one of the following then the question is considered valid
-  static const char *qStarters[NUM_QSTARTERS] = {"who", "when", "where", "what", "how", "can", "could", "should", "shall", "will", "do", "does", "did", "am", "is", "are"};
-  for (i = 0; i < NUM_QSTARTERS; i++)
-    if (strcmp(firstWord, qStarters[i]) == 0)
-      return true;
-
-  printf("Are you sure you asked a proper question?\n");
-  return false;
-}
-
-
-
-// checks wether the user input can be translated into "quit program"
-bool wantsToQuit(const char *question) {
-  static const char *quitters[NUM_QUITTERS] = {"shut up", "please shut up", "quit", "exit", "stop"};
-  for (unsigned short int i = 0; i < NUM_QUITTERS; i++)
-    if (strcmp(question, quitters[i]) == 0)
-      return true;
-  return false;
+  printf("%s\n", answers[index]);
 }
